@@ -48,9 +48,31 @@ func main() {
 
 	sl := slack.New(slackToken)
 
+	fmt.Println("Obtain user data")
+	user, err := sl.GetUserInfo("Robert Barabas")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+	} else {
+		fmt.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
+	}
+
+	fmt.Println("Obtain existing groups")
 	groups, err := sl.GetUserGroups()
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		os.Exit(2)
+	}
+
+	fmt.Println("List existing groups")
 	for _, group := range groups {
 		fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
 	}
 
+	fmt.Println("Create test group")
+	ug := slack.UserGroup{
+		ID:    "test-oncall",
+		Users: []string{"Robert Barabas", "Jake Edgington", "Chetan Gowda"},
+	}
+
+	sl.CreateUserGroup(ug)
 }
