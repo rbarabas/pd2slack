@@ -49,7 +49,7 @@ func main() {
 	sl := slack.New(slackToken)
 
 	fmt.Println("Obtain user data")
-	user, err := sl.GetUserInfo("Robert Barabas")
+	user, err := sl.GetUserInfo("U01V0A4SYBC")
 	if err != nil {
 		fmt.Printf("%s\n", err)
 	} else {
@@ -70,9 +70,16 @@ func main() {
 
 	fmt.Println("Create test group")
 	ug := slack.UserGroup{
-		ID:    "test-oncall",
-		Users: []string{"Robert Barabas", "Jake Edgington", "Chetan Gowda"},
+		Name:  "test-oncall",
+		Users: []string{"U01V0A4SYBC"},
 	}
 
-	sl.CreateUserGroup(ug)
+	group, err := sl.CreateUserGroup(ug)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		os.Exit(3)
+	}
+
+	fmt.Println("Reading back test group")
+	fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
 }
