@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"pd2slack/internal/sync"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/slack-go/slack"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -29,22 +30,13 @@ func main() {
 		panic("no Slack authorization token found in configuration")
 	}
 
-	var opts pagerduty.ListEscalationPoliciesOptions
-	pd := pagerduty.NewClient(pdToken)
-	eps, err := pd.ListEscalationPolicies(opts)
+	pd := sync.NewPagerDutyClient(pagerduty.NewClient(pdToken))
+	pdGroups, err := pd.GetGroups(context.TODO())
 	if err != nil {
 		panic(err)
 	}
 
-	for _, p := range eps.EscalationPolicies {
-		m := make(map[interface{}]interface{})
-		if err := yaml.Unmarshal([]byte(p.Description), &m); err != nil {
-			continue
-		}
-		if m["slackgroup"] != nil {
-			fmt.Printf("%s (%s)\n", m["slackgroup"], p.Name)
-		}
-	}
+	fmt.Printf("%v\n", pdGroups)
 
 	sl := slack.New(slackToken)
 
