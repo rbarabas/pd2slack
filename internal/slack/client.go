@@ -30,6 +30,28 @@ func (s *SlackClient) GetGroupIDbyName(ctx context.Context, name string) (string
 	return "", false, nil
 }
 
+func (s *SlackClient) CreateGroup(ctx context.Context, name string) (string, error) {
+	ug := slack.UserGroup{
+		Name: name,
+		// Users:  []string{"U01V0A4SYBC"},
+		Handle: name,
+	}
+
+	// if group, err := s.client.DisableUserGroup("test-oncall"); err != nil {
+	// 	log.Println(err)
+	// 	os.Exit(1)
+	// } else {
+	// 	log.Printf("\nDeleted user group: [%+v]", group)
+	// }
+
+	group, err := s.client.CreateUserGroupContext(ctx, ug)
+	if err != nil {
+		return "", errors.Wrapf(err, "Unable to get the group by name:[%s]", name)
+	}
+	return group.ID, nil
+
+}
+
 // func (s *SlackClient) ClearGroup(id string) {
 
 // }
