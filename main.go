@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"pd2slack/internal/sync"
 
@@ -15,8 +15,12 @@ func main() {
 	viper.SetConfigFile("pd2slack.conf")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
+
+	log.SetFlags(log.Lshortfile)
+	log.SetPrefix("pd2slack: ")
+
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(2)
 	}
 
@@ -36,42 +40,50 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("%v\n", pdGroups)
+	log.Printf("%v\n", pdGroups)
 
 	sl := slack.New(slackToken)
 
-	fmt.Println("Obtain user data")
+	log.Println("Obtain user data")
 	user, err := sl.GetUserInfo("U01V0A4SYBC")
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		log.Printf("%s\n", err)
 	} else {
-		fmt.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
+		log.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
 	}
 
-	fmt.Println("Obtain existing groups")
+	log.Println("Obtain existing groups")
 	groups, err := sl.GetUserGroups()
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		log.Printf("%s\n", err)
 		os.Exit(2)
 	}
 
-	fmt.Println("List existing groups")
+	log.Println("List existing groups")
 	for _, group := range groups {
-		fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
+		log.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
 	}
 
-	fmt.Println("Create test group")
+	log.Println("Create test group")
 	ug := slack.UserGroup{
-		Name:  "test-oncall",
-		Users: []string{"U01V0A4SYBC"},
+		Name:   "test-oncall",
+		Users:  []string{"U01V0A4SYBC"},
+		Handle: "test-oncall",
+	}
+
+	if group, err := sl.DisableUserGroup("test-oncall"); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	} else {
+		log.Printf("\nDeleted user group: [%+v]", group)
 	}
 
 	group, err := sl.CreateUserGroup(ug)
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		log.Printf("%s\n", err)
 		os.Exit(3)
 	}
 
-	fmt.Println("Reading back test group")
-	fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
+	log.Println("Reading back test group")
+	log.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
 }
