@@ -16,3 +16,5 @@
 
 # Exclude credentials file from check in
 **/pd2slack.conf
+
+.idea
