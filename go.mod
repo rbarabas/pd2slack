@@ -2,7 +2,11 @@ module pd2slack
 
 go 1.17
 
-require github.com/PagerDuty/go-pagerduty v1.5.0
+require (
+	github.com/PagerDuty/go-pagerduty v1.5.0
+	github.com/pkg/errors v0.8.1
+	github.com/slack-go/slack v0.10.2
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
@@ -12,7 +16,6 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
-	github.com/slack-go/slack v0.10.2 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

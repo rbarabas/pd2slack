@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"os"
+	"pd2slack/internal/slack"
 	"pd2slack/internal/sync"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/slack-go/slack"
 	"github.com/spf13/viper"
 )
 
@@ -18,6 +18,8 @@ func main() {
 
 	log.SetFlags(log.Lshortfile)
 	log.SetPrefix("pd2slack: ")
+
+	ctx := context.Background()
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println(err)
@@ -42,48 +44,62 @@ func main() {
 
 	log.Printf("%v\n", pdGroups)
 
-	sl := slack.New(slackToken)
+	sl := slack.NewSlackClient(slackToken)
 
-	log.Println("Obtain user data")
-	user, err := sl.GetUserInfo("U01V0A4SYBC")
+	groupName := "test-oncall"
+	grpID, isExists, err := sl.GetGroupIDbyName(ctx, "test-oncall")
 	if err != nil {
-		log.Printf("%s\n", err)
+		log.Fatalf("Error: %s", err)
+	}
+	if isExists {
+		log.Printf("GroupID: [%s]", grpID)
 	} else {
-		log.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
+		log.Printf("Group:[%s] doesn't exits", groupName)
+
 	}
 
-	log.Println("Obtain existing groups")
-	groups, err := sl.GetUserGroups()
-	if err != nil {
-		log.Printf("%s\n", err)
-		os.Exit(2)
-	}
+	// sl := slack.New(slackToken)
 
-	log.Println("List existing groups")
-	for _, group := range groups {
-		log.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
-	}
+	// log.Println("Obtain user data")
+	// user, err := sl.GetUserInfo("U01V0A4SYBC")
+	// if err != nil {
+	// 	log.Printf("%s\n", err)
+	// } else {
+	// 	log.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
+	// }
 
-	log.Println("Create test group")
-	ug := slack.UserGroup{
-		Name:   "test-oncall",
-		Users:  []string{"U01V0A4SYBC"},
-		Handle: "test-oncall",
-	}
+	// log.Println("Obtain existing groups")
+	// groups, err := sl.GetUserGroups()
+	// if err != nil {
+	// 	log.Printf("%s\n", err)
+	// 	os.Exit(2)
+	// }
 
-	if group, err := sl.DisableUserGroup("test-oncall"); err != nil {
-		log.Println(err)
-		os.Exit(1)
-	} else {
-		log.Printf("\nDeleted user group: [%+v]", group)
-	}
+	// log.Println("List existing groups")
+	// for _, group := range groups {
+	// 	log.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
+	// }
 
-	group, err := sl.CreateUserGroup(ug)
-	if err != nil {
-		log.Printf("%s\n", err)
-		os.Exit(3)
-	}
+	// log.Println("Create test group")
+	// ug := slack.UserGroup{
+	// 	Name:   "test-oncall",
+	// 	Users:  []string{"U01V0A4SYBC"},
+	// 	Handle: "test-oncall",
+	// }
 
-	log.Println("Reading back test group")
-	log.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
+	// if group, err := sl.DisableUserGroup("test-oncall"); err != nil {
+	// 	log.Println(err)
+	// 	os.Exit(1)
+	// } else {
+	// 	log.Printf("\nDeleted user group: [%+v]", group)
+	// }
+
+	// group, err := sl.CreateUserGroup(ug)
+	// if err != nil {
+	// 	log.Printf("%s\n", err)
+	// 	os.Exit(3)
+	// }
+
+	// log.Println("Reading back test group")
+	// log.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
 }
