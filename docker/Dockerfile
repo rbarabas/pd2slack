@@ -16,7 +16,7 @@ RUN adduser -D pd2slack
 RUN chown pd2slack /build
 USER pd2slack
 
-RUN git clone https://github.com/rbarabas/pd2slack.git
+RUN git clone https://github.com/BoltApp/pd2slack.git
 WORKDIR /build/pd2slack
 RUN git checkout poc
 RUN go build pd2slack
