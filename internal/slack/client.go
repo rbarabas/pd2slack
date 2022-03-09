@@ -2,6 +2,8 @@ package slack
 
 import (
 	"context"
+	"log"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
@@ -32,24 +34,35 @@ func (s *SlackClient) GetGroupIDbyName(ctx context.Context, name string) (string
 
 func (s *SlackClient) CreateGroup(ctx context.Context, name string) (string, error) {
 	ug := slack.UserGroup{
-		Name: name,
-		// Users:  []string{"U01V0A4SYBC"},
+		Name:   name,
 		Handle: name,
 	}
-
-	// if group, err := s.client.DisableUserGroup("test-oncall"); err != nil {
-	// 	log.Println(err)
-	// 	os.Exit(1)
-	// } else {
-	// 	log.Printf("\nDeleted user group: [%+v]", group)
-	// }
-
 	group, err := s.client.CreateUserGroupContext(ctx, ug)
 	if err != nil {
 		return "", errors.Wrapf(err, "Unable to get the group by name:[%s]", name)
 	}
 	return group.ID, nil
 
+}
+
+func (s *SlackClient) AddMembersToGroup(ctx context.Context, groupID string, emailAddresses ...string) error {
+	userIDs := []string{}
+	for _, email := range emailAddresses {
+		user, err := s.client.GetUserByEmailContext(ctx, email)
+		if err != nil {
+			return errors.Wrapf(err, "Unable to fetch member info for email:[%s]", email)
+		}
+		log.Printf("User info: [%+v]", user)
+		userIDs = append(userIDs, user.ID)
+	}
+
+	joinedUserIDs := strings.Join(userIDs, ",")
+	_, err := s.client.UpdateUserGroupMembersContext(ctx, groupID, joinedUserIDs)
+	if err != nil {
+		return errors.Wrapf(err, "Unable to add member:[%s] to user group:[%s]", emailAddresses, groupID)
+	}
+
+	return nil
 }
 
 // func (s *SlackClient) ClearGroup(id string) {

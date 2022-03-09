@@ -46,7 +46,7 @@ func main() {
 
 	sl := slack.NewSlackClient(slackToken)
 
-	for key, _ := range pdGroups {
+	for key, pdUsers := range pdGroups {
 		log.Println("PD Group ID", key)
 		slackGroupName := key
 		slackGroupID, groupExists, err := sl.GetGroupIDbyName(ctx, slackGroupName)
@@ -66,5 +66,13 @@ func main() {
 			log.Printf("Created new group. Name:[%s], ID:[%s]", slackGroupName, slackGroupID)
 		}
 
+		emails := []string{}
+		for _, user := range pdUsers {
+			emails = append(emails, user.Email)
+		}
+		err = sl.AddMembersToGroup(ctx, slackGroupID, emails...)
+		if err != nil {
+			log.Fatalf("Error: %s", err)
+		}
 	}
 }
