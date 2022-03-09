@@ -4,39 +4,26 @@ import (
 	"context"
 	"log"
 	"os"
+	"pd2slack/internal/config"
 	"pd2slack/internal/slack"
 	"pd2slack/internal/sync"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/spf13/viper"
 )
 
 func main() {
-	viper.SetConfigFile("pd2slack.conf")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-
 	log.SetFlags(log.Lshortfile)
 	log.SetPrefix("pd2slack: ")
 
+	config, err := config.Get()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
 
-	if err := viper.ReadInConfig(); err != nil {
-		log.Println(err)
-		os.Exit(2)
-	}
-
-	pdToken := viper.GetString("pagerduty.authtoken")
-	if pdToken == "" {
-		panic("no PagerDuty authorization token found in configuration")
-	}
-
-	slackToken := viper.GetString("slack.authtoken")
-	if slackToken == "" {
-		panic("no Slack authorization token found in configuration")
-	}
-
-	pd := sync.NewPagerDutyClient(pagerduty.NewClient(pdToken))
+	pd := sync.NewPagerDutyClient(pagerduty.NewClient(config.PagerDutyToken))
 	pdGroups, err := pd.GetGroups(context.TODO())
 	if err != nil {
 		panic(err)
@@ -44,7 +31,7 @@ func main() {
 
 	log.Printf("%+v\n", pdGroups)
 
-	sl := slack.NewSlackClient(slackToken)
+	sl := slack.NewSlackClient(config.SlackToken)
 
 	for key, pdUsers := range pdGroups {
 		log.Println("PD Group ID", key)
