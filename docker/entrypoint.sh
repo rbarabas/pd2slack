@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-/usr/bin/pd2slack
+cd /pd2slack && ./pd2slack
