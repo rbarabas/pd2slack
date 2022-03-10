@@ -13,3 +13,11 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Exclude credentials file from check in
+**/pd2slack.conf
+
+# Exclude built binary
+pd2slack
+
+.idea
