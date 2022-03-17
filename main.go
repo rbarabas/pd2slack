@@ -57,6 +57,13 @@ func main() {
 		for _, user := range pdUsers {
 			emails = append(emails, user.Email)
 		}
+
+		// Empty schedule
+		if len(emails) == 0 {
+			log.Printf("No emails found for slack group %s (ID:%s)", slackGroupName, slackGroupID)
+			os.Exit(0)
+		}
+
 		err = sl.AddMembersToGroup(ctx, slackGroupID, emails...)
 		if err != nil {
 			log.Fatalf("Error: %s", err)
