@@ -19,7 +19,7 @@ USER pd2slack
 RUN rm -rf /build/pdslack
 RUN git clone https://github.com/rbarabas/pd2slack.git
 WORKDIR /build/pd2slack
-RUN git checkout poc
+RUN git checkout master
 RUN go build pd2slack
 
 FROM alpine:3.15
