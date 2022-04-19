@@ -2,36 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"pd2slack/internal/config"
+	"pd2slack/internal/log"
 	"pd2slack/internal/slack"
 	"pd2slack/internal/sync"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"go.uber.org/zap"
 )
 
-var sugar *zap.SugaredLogger
-
-func initLogger() {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("Cannot initialize zap logger: %v", err)
-	}
-	defer logger.Sync()
-
-	sugar = logger.Sugar()
-
-}
-
 func main() {
-	initLogger()
 
 	config, err := config.Get()
 	if err != nil {
-		sugar.Errorf("unable to obtain configuration: %v:", err)
+		log.Errorf("unable to obtain configuration: %v:", err)
 		os.Exit(1)
 	}
 
@@ -40,34 +24,32 @@ func main() {
 	pd := sync.NewPagerDutyClient(pagerduty.NewClient(config.PagerDutyToken))
 	pdGroups, err := pd.GetGroups(context.TODO())
 	if err != nil {
-		msg := fmt.Sprintf("unable to instantiate PagerDuty client: %v:", err)
-		sugar.Error(msg)
-		os.Exit(0)
+		log.Panicf("Unable to instantiate PagerDuty client: %v:", err)
 	}
 
-	sugar.Infof("%+v\n", pdGroups)
+	log.Infof("%+v\n", pdGroups)
 
 	sl := slack.NewSlackClient(config.SlackToken)
 
 	for key, pdUsers := range pdGroups {
-		sugar.Info(fmt.Sprintf("PD Group ID: %s", key))
+		log.Infof("PD Group ID: %s", key)
 		slackGroupName := key
 		slackGroupID, groupExists, err := sl.GetGroupIDbyName(ctx, slackGroupName)
 		if err != nil {
-			sugar.Errorf("Error: %s", err)
+			log.Errorf("Error: %s", err)
 		}
 
 		if groupExists {
-			sugar.Infof("Pre existing GroupID: [%s]", slackGroupID)
+			log.Infof("Pre existing GroupID: [%s]", slackGroupID)
 		}
 
 		if !groupExists {
 			slackGroupID, err = sl.CreateGroup(ctx, slackGroupName)
 			if err != nil {
-				sugar.Errorf("unable to create user group: [%s], error:[%s]", slackGroupName, err)
+				log.Errorf("unable to create user group: [%s], error:[%s]", slackGroupName, err)
 				continue
 			}
-			sugar.Infof("Created new group. Name:[%s], ID:[%s]", slackGroupName, slackGroupID)
+			log.Infof("Created new group. Name:[%s], ID:[%s]", slackGroupName, slackGroupID)
 		}
 
 		emails := []string{}
@@ -77,13 +59,13 @@ func main() {
 
 		// Empty schedule
 		if len(emails) == 0 {
-			sugar.Infof("No emails found for slack group %s (ID:%s)", slackGroupName, slackGroupID)
+			log.Infof("No emails found for slack group %s (ID:%s)", slackGroupName, slackGroupID)
 			os.Exit(0)
 		}
 
 		err = sl.AddMembersToGroup(ctx, slackGroupID, emails...)
 		if err != nil {
-			sugar.Errorf("Error: %s", err)
+			log.Errorf("Error: %s", err)
 			continue
 		}
 	}
