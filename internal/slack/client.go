@@ -2,8 +2,9 @@ package slack
 
 import (
 	"context"
-	"log"
 	"strings"
+
+	"pd2slack/internal/log"
 
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
@@ -52,7 +53,7 @@ func (s *SlackClient) AddMembersToGroup(ctx context.Context, groupID string, ema
 		if err != nil {
 			return errors.Wrapf(err, "Unable to fetch member info for email:[%s]", email)
 		}
-		log.Printf("User info: [%+v]", user)
+		log.Infof("User info: [%+v]", user)
 		userIDs = append(userIDs, user.ID)
 	}
 
